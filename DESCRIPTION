@@ -1,7 +1,7 @@
 Package: RAMP
 Type: Package
 Title: Regularized Generalized Linear Models with Interaction Effects
-Version: 2.0.2
+Version: 2.0.2.9001
 Date: 2020-01-03
 Authors@R: c(person("Yang", "Feng", email = "yangfengstat@gmail.com",
   role = c("aut", "cre")),person("Ning", "Hao", email = "nhao@math.arizona.edu",

@@ -24,8 +24,8 @@
 #' @param tune tuning parameter selection method.
 #' 'AIC', 'BIC', 'EBIC' and 'GIC' are available options. Default is EBIC.
 #' @param penalty.factor A multiplicative factor for the penalty applied to each coefficient. If supplied, penalty.factor must be a numeric vector of length equal to the number of columns of X. The purpose of penalty.factor is to apply differential penalization if some coefficients are thought to be more likely than others to be in the model. In particular, penalty.factor can be 0, in which case the coefficient is always in the model without shrinkage.
-#' @param inter.penalty.factor the penalty factor for interactions effects. Default is 1. 
-#' larger value discourage interaction effects. 
+#' @param inter.penalty.factor the penalty factor for interactions effects. Default is 1.
+#' larger value discourage interaction effects.
 #' @param lam.list a user supplied \eqn{\lambda} sequence.
 #' typical usage is to have the program compute its own
 #' \code{lambda} sequence based on \code{lambda.min.ratio} and \code{n.lambda}.
@@ -94,8 +94,8 @@
 #' fit4
 #' ypred4 = predict(fit4, xtest)
 #' mean((ypred4-ytest)^2)
-RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, inter = TRUE, 
-    hier = "Strong", eps = 1e-15, tune = "EBIC", penalty.factor = rep(1,ncol(X)), inter.penalty.factor = 1, lam.list, lambda.min.ratio, max.iter = 100, 
+RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, inter = TRUE,
+    hier = "Strong", eps = 1e-15, tune = "EBIC", penalty.factor = rep(1,ncol(X)), inter.penalty.factor = 1, lam.list, lambda.min.ratio, max.iter = 100,
     max.num, n.lambda = 100, ebic.gamma = 1, refit = TRUE, trace = FALSE) {
     ## hier = 'Strong', or 'Weak', strong or weak heredity.
     if (penalty == "SCAD" & is.null(gamma)) {
@@ -108,30 +108,30 @@ RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, int
         gamma = 0
     }
     pentype = switch(penalty, LASSO = 1, MCP = 2, SCAD = 3)
-    
+
     n = dim(X)[1]
     p = dim(X)[2]
-    if (missing(max.num)) 
+    if (missing(max.num))
         max.num = p + 1 else max.num = min(max.num, p + 1)
-    
-    if (missing(lambda.min.ratio)) 
+
+    if (missing(lambda.min.ratio))
         lambda.min.ratio = ifelse(n < p, 0.01, 1e-04)
-    
+
     ################ prepare variables
     lambda = NULL
     beta.mat = NULL  ##storing the beta coefficents along the path
     beta = rep(0, p)  ##the current beta estimates excluding the interation terms
- 
+
     index = NULL
-    
+
     ################ save the original X for generating interactions
     X0 = X
     ################ standardize design matrix
-    X = scale(X0) 
+    X = scale(X0)
     xm = attr(X, "scaled:center")
     xsd = attr(X, "scaled:scale")
-    
-    
+
+
     ############# lambda list
     if (family == "gaussian") {
     max.lam = max(abs((1/n) * (t(X) %*% (y - mean(y)))))
@@ -142,8 +142,8 @@ RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, int
     } else if (family == "poisson") {
         max.lam = max(abs((1/n) * (t(X) %*% (y - mean(y)))))
         a0list = rep(log(mean(y)), n.lambda)
-    }  
-    
+    }
+
     if (missing(lam.list)) {
         min.lam = max.lam * lambda.min.ratio
         lam.list = exp(seq(from = log(max.lam), to = log(min.lam), length.out = n.lambda))
@@ -151,28 +151,28 @@ RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, int
         lam.list = lam.list[lam.list <= max.lam]
         n.lambda = length(lam.list)
     }
-    
-    
+
+
     ########initialie
-    
+
     a0 = a0list[1]
-    loglik.list = cri.list = AIC.list = BIC.list = EBIC.list = GIC.list = 
+    loglik.list = cri.list = AIC.list = BIC.list = EBIC.list = GIC.list =
       df.list = df.m.list = df.i.list = vector('numeric', n.lambda)
-    ind.list.inter = ind.list.main = ind.list.inter.xlab = beta.list.inter = 
+    ind.list.inter = ind.list.main = ind.list.inter.xlab = beta.list.inter =
       vector('list', n.lambda)
 
-    
+
     ############## main part
-    
-    
+
+
     ## expand X matrix dynamically each step by incorporating the new candidates of
     ## interactions, which are the interactions of the current active variables minus
     ## the current interaction effects, the interactions will play the same role as
     ## the main effect, except we keep track of the list through the lambda sequence.
     ## Keep track of other indices as well.colnames(X)
-    
+
     colnames(X) = paste("X", 1:p, sep = "")
-    
+
     nonPen = rep(0, p)
     for (k in 1:n.lambda) {
         nonPen = rep(0, p) ### heredity force
@@ -203,14 +203,14 @@ RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, int
                   newinter = cbind(newinter, nnewinter)
                   bb = c(bb, naa)
                 }
-                
+
             }
-            
-            
+
+
             curInter = colnames(X)[-(1:p)]
             candInter = setdiff(bb, curInter)
             curloc = match(candInter, bb)
-            if ( length(index) + length(curloc) > 5e5 ) 
+            if ( length(index) + length(curloc) > 5e5 )
             {
               k = k - 1
               break
@@ -219,8 +219,8 @@ RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, int
             newinter = newinter[, curloc]
             ncurInter = length(curInter)
             ncandInter = length(candInter)
-            
-            
+
+
             # cat('k=',k,'candidate interaction', candInter, '\n', sep=' ')
             if (ncurInter > 0 & hier == "Strong") {
                 ## active interaction terms, setting the penalty for the parents to 0
@@ -240,40 +240,40 @@ RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, int
                 xisd1 = attr(tmp, "scaled:scale")
                 xm = c(xm, xim1)
                 xsd = c(xsd, xisd1)
-                
+
                 beta = c(beta, rep(0, ncandInter))  #expand the beta coefficent vector
                 # to include the candiate interaction terms.
             }
         }
-      
+
         pf = c(penalty.factor,rep(inter.penalty.factor,ncol(X) - p))
         nonpenind = which(nonPen != 0)
         pf[nonpenind] = 0
           for (ite in 1:max.iter) {
             if (ite == 1) {
-                cd.temp1 = cd.general(X = X, y = y, a0 = a0, beta = beta, epsilon = eps, 
-                  max.iter = 1, lambda = lam, family = family, bInd = break.ind, 
+                cd.temp1 = cd.general(X = X, y = y, a0 = a0, beta = beta, epsilon = eps,
+                  max.iter = 1, lambda = lam, family = family, bInd = break.ind,
                   pf = pf, pentype = pentype, gamma = gamma)
                 a0 = cd.temp1$a0
                 beta = cd.temp1$beta
                 ind1 = which(abs(beta) > eps)
             }
-            
-            
+
+
             # #CD
             if (ite > 1) {
-                  cd.temp2 = cd.general(X = X[, ind1], y = y, a0 = a0, beta = beta[ind1], 
-                    epsilon = eps, max.iter = max.iter, lambda = lam, family = family, 
-                    bInd = break.ind, pf = pf[ind1], pentype = pentype, 
+                  cd.temp2 = cd.general(X = X[, ind1], y = y, a0 = a0, beta = beta[ind1],
+                    epsilon = eps, max.iter = max.iter, lambda = lam, family = family,
+                    bInd = break.ind, pf = pf[ind1], pentype = pentype,
                     gamma = gamma)
                   a0 = cd.temp2$a0
                   beta2 = beta
                   beta2[ind1] = cd.temp2$beta
-                  
-                  
+
+
                   # ########redetect active set check.beta=new.beta
-                  cd.temp3 = cd.general(X = X, y = y, a0 = a0, beta = beta2, epsilon = eps, 
-                    max.iter = 1, lambda = lam, family = family, bInd = break.ind, 
+                  cd.temp3 = cd.general(X = X, y = y, a0 = a0, beta = beta2, epsilon = eps,
+                    max.iter = 1, lambda = lam, family = family, bInd = break.ind,
                     pf = pf, pentype = pentype, gamma = gamma)
                   a0 = cd.temp3$a0
                   beta = cd.temp3$beta
@@ -282,46 +282,46 @@ RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, int
                     break
                   }
                   ind1 = ind3
-                  
+
                 }  ##END iter>1
-            
-            
-            
-            
+
+
+
+
             # end check-cd-recheck
         }  ##END iter
-        
+
         # cat('k=',k,'iter num',ite,'\n',sep=' ')
-        
+
         # }
-        
+
         # end case if sparse enough }
-     
+
         ind.list.main[[k]] = which(abs(beta[1:p]) > eps)
         ind.list.inter[[k]] = which(abs(beta[-(1:p)]) > eps)  #record the interaction
         # index pair location list
         size.main = length(ind.list.main[[k]])
         size.inter = length(ind.list.inter[[k]])
-     
-        
+
+
         index = which(abs(beta) > eps)
         beta[-index] = 0
-        
+
         if (size.inter > 0 & hier == "Strong") {
             ### if interaction effects are detected, enforce the strong heredity in this step
             tmpindname = colnames(X)[ind.list.inter[[k]] + p]
             cur.main.ind = intertomain(tmpindname)
-            if (trace == T) 
-                cat("k=", k, "Enforced main effects", setdiff(cur.main.ind, ind.list.main[[k]]), 
+            if (trace == T)
+                cat("k=", k, "Enforced main effects", setdiff(cur.main.ind, ind.list.main[[k]]),
                   "\n")
-            
+
             ind.list.main[[k]] = union(ind.list.main[[k]], cur.main.ind)
             index = union(index, cur.main.ind)
         }
         size.main = length(ind.list.main[[k]])
-        
+
         index = sort(index)
-        
+
         beta.n = beta
         a0.n = a0
         if (refit == TRUE & length(index) > 0 ) {
@@ -330,15 +330,15 @@ RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, int
           a0.n = beta.lmfit[1]
           beta.n[index] = beta.lmfit[-1]
         }
-    
+
         df.list[k] = size.main + size.inter
-        
+
         loglik.list[k] = loglik(cbind(1,X), y, c(a0.n,beta.n), family)
-        
-         
+
+
         if (length(beta) > p) {
             tmp = which(abs(beta[-(1:p)]) > eps)
-            beta = beta[c(1:p, p + tmp)] 
+            beta = beta[c(1:p, p + tmp)]
             beta.n = beta.n[c(1:p, p + tmp)]
             X = X[, c(1:p, p + tmp)]
             xm = xm[c(1:p, p + tmp)]
@@ -348,47 +348,47 @@ RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, int
                 ## if interaction effects are selected.
                 ind.list.inter.xlab[[k]] = colnames(X)[-(1:p)]
                 beta.list.inter[[k]] = beta.n[-(1:p)]/xsd[-(1:p)]
-            } 
+            }
         }
         if (family == 'binomial' & max(abs(beta)) > 10) {
           k = k - 1
           break
         }
-        
-        
+
+
         beta.s = beta.n/xsd
         a0.s = a0.n - sum(beta.s*xm)
-        
+
         a0list[k] = a0.s
         beta.mat = cbind(beta.mat, beta.s[1:p])
-    
-        
-        
+
+
+
         df.m.list[k] = length(ind.list.main[[k]])
         df.i.list[k] = length(beta) - p
-        
-        if (df.list[k] >= n - 1) 
+
+        if (df.list[k] >= n - 1)
             break
         if (break.ind == TRUE) {
             print("Warning: Algorithm failed to converge for all values of lambda")
             break
         }
-        
-        
+
+
         if (trace == T) {
             cat("k=", k, "current main effects", ind.list.main[[k]], "\n", sep = " ")
             cat("k=", k, "current interaction", ind.list.inter.xlab[[k]], "\n", sep = " ")
         }
         # end the outer loop: decrease in lambda
     }
-    
+
     #df.m.max = max(df.m.list)
     # if (inter == FALSE) {
     #   p.eff = p
     # } else if (hier == "Strong") {
     #   p.eff = p + df.m.max *(df.m.max + 1)/2
     # } else if (hier == "Weak") {
-    #   p.eff = p + df.m.max *(df.m.max + 1)/2 + df.m.max*(p - df.m.max) 
+    #   p.eff = p + df.m.max *(df.m.max + 1)/2 + df.m.max*(p - df.m.max)
     # }
     if (inter == FALSE) {
       p.eff = p
@@ -397,26 +397,26 @@ RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, int
     } else if (hier == "Weak") {
       p.eff = p + df.m.list *(df.m.list + 1)/2 + df.m.list*(p - df.m.list)
     }
-    
-    
+
+
       AIC.list = loglik.list + 2 * df.list
       BIC.list = loglik.list + log(n) * df.list
-      EBIC.list = loglik.list + log(n) * df.list + 2 * ebic.gamma * 
+      EBIC.list = loglik.list + log(n) * df.list + 2 * ebic.gamma *
         log(choose(p.eff, df.list))
       GIC.list = loglik.list + log(log(n)) * log(p.eff) * df.list
- 
+
       cri.list = switch(tune, AIC = AIC.list, BIC = BIC.list, EBIC = EBIC.list,
                         GIC = GIC.list)
     region  = which(df.list[1:k] < sqrt(n))
-  
-   #browser()
-    cri.loc = which.min(cri.list[region])
-    AIC.loc = which.min(AIC.list[region])
-    BIC.loc = which.min(BIC.list[region])
-    EBIC.loc = which.min(EBIC.list[region])
-    GIC.loc = which.min(GIC.list[region])
+
+    # browser()
+    cri.loc = region[which.min(cri.list[region])]
+    AIC.loc = region[which.min(AIC.list[region])]
+    BIC.loc = region[which.min(BIC.list[region])]
+    EBIC.loc = region[which.min(EBIC.list[region])]
+    GIC.loc = region[which.min(GIC.list[region])]
     all.locs = c(AIC.loc, BIC.loc, EBIC.loc, GIC.loc)
-    
+
     lambda = lam.list[1:ncol(beta.mat)]
     # print(cri.loc) browser()
     if (length(ind.list.inter) == 0) {
@@ -429,11 +429,11 @@ RAMP <- function(X, y, family = "gaussian", penalty = "LASSO", gamma = NULL, int
     } else {
         beta.i = beta.list.inter[[cri.loc]]
     }
-    val = list(a0 = a0list[cri.loc], a0.list = a0list, beta.m.mat = beta.mat, beta.i.mat = beta.list.inter, 
-        beta.m = beta.mat[ind.list.main[[cri.loc]], cri.loc], beta.i = beta.i, df = df.list[1:k], 
-        df.m = df.m.list[1:k], df.i = df.i.list[1:k], lambda = lambda[1:k], mainInd.list = ind.list.main[1:k], 
-        mainInd = ind.list.main[[cri.loc]], cri.list = cri.list[1:k], loglik.list = loglik.list[1:k], 
-        cri.loc = cri.loc, all.locs = all.locs, interInd.list = ind.list.inter.xlab[1:k], 
+    val = list(a0 = a0list[cri.loc], a0.list = a0list, beta.m.mat = beta.mat, beta.i.mat = beta.list.inter,
+        beta.m = beta.mat[ind.list.main[[cri.loc]], cri.loc], beta.i = beta.i, df = df.list[1:k],
+        df.m = df.m.list[1:k], df.i = df.i.list[1:k], lambda = lambda[1:k], mainInd.list = ind.list.main[1:k],
+        mainInd = ind.list.main[[cri.loc]], cri.list = cri.list[1:k], loglik.list = loglik.list[1:k],
+        cri.loc = cri.loc, all.locs = all.locs, interInd.list = ind.list.inter.xlab[1:k],
         interInd = interInd, family = family, X = X0, y = y)
     class(val) = "RAMP"
     return(val)
